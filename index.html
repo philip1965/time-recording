@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Time Recorder</title>
+<link rel="apple-touch-icon" href="icon.png">
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f3f4f6;
+    color: #111827;
+    line-height: 1.4;
+    -webkit-text-size-adjust: 100%;
+    padding-bottom: 88px;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #0f172a;
+    color: white;
+    padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    margin: 0;
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 12px;
+  }
+  .card {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .card h2 {
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+    border-bottom: 2px solid #eef2f7;
+    padding-bottom: 8px;
+  }
+  .field { margin-bottom: 10px; }
+  .field label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    background: #fafafa;
+    color: #111827;
+    padding: 11px 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 68px;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: white;
+  }
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: "▾";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #6b7280;
+    font-size: 0.95rem;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: #4f46e5;
+    color: white;
+  }
+  .btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+  }
+  .btn-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+  .btn-small {
+    padding: 6px 8px;
+    font-size: 0.72rem;
+    border-radius: 8px;
+  }
+  .manage-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eef2f7;
+  }
+  .manage-item:last-child { border-bottom: none; }
+  .muted {
+    color: #6b7280;
+    font-size: 0.84rem;
+  }
+  .pill-row {
+    display: flex;
+    gap: 8px;
+  }
+  .pill-row .btn {
+    flex: 1;
+  }
+  .active-pill {
+    background: #4f46e5 !important;
+    color: white !important;
+  }
+  .summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eef2f7;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+  }
+  .summary strong { font-size: 1rem; }
+  .item {
+    padding: 10px 2px;
+    border-bottom: 1px solid #eef2f7;
+    cursor: pointer;
+  }
+  .item:last-child { border-bottom: none; }
+  .item.editing {
+    background: #fff7ed;
+    border-left: 3px solid #ea580c;
+    padding-left: 8px;
+    margin-left: -8px;
+    border-radius: 6px;
+  }
+  .item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .client {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #4f46e5;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
+  }
+  .title {
+    font-size: 0.96rem;
+    font-weight: 700;
+  }
+  .desc {
+    font-size: 0.82rem;
+    color: #4b5563;
+  }
+  .meta {
+    font-size: 0.74rem;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+  .amount {
+    font-size: 1.08rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 999px;
+    margin-left: 6px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge-nonbillable {
+    background: #e5e7eb;
+    color: #374151;
+  }
+  .sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  .sticky-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    gap: 8px;
+  }
+  .sticky-inner .btn { flex: 1; }
+  .hidden { display: none !important; }
+  .banner {
+    display: none;
+    background: #fff7ed;
+    color: #9a3412;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .banner.show { display: block; }
+  .toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    bottom: 86px;
+    background: #111827;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: all 0.25s ease;
+    z-index: 40;
+    pointer-events: none;
+    font-size: 0.88rem;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  .empty {
+    text-align: center;
+    padding: 22px 10px;
+    color: #6b7280;
+  }
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Time Recorder</h1>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Manage Clients</h2>
+      <div class="row">
+        <div class="field" style="margin-bottom:0;">
+          <label for="newClient">New Client</label>
+          <input id="newClient" type="text" placeholder="Enter client name" />
+        </div>
+        <div class="field" style="margin-bottom:0; display:flex; align-items:flex-end;">
+          <button class="btn btn-primary" id="addClientBtn" type="button">Add Client</button>
+        </div>
+      </div>
+      <div id="clientList" class="muted"></div>
+    </div>
+
+    <div class="card">
+      <h2>Manage Projects</h2>
+      <div class="field">
+        <label for="projectClientSelect">Client</label>
+        <div class="select-wrap">
+          <select id="projectClientSelect"></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field" style="margin-bottom:0;">
+          <label for="newProject">New Project</label>
+          <input id="newProject" type="text" placeholder="Enter project name" />
+        </div>
+        <div class="field" style="margin-bottom:0; display:flex; align-items:flex-end;">
+          <button class="btn btn-primary" id="addProjectBtn" type="button">Add Project</button>
+        </div>
+      </div>
+      <div id="projectList" class="muted"></div>
+    </div>
+
+    <div class="card" id="formCard">
+      <h2 id="formHeading">New Time Entry</h2>
+      <div class="banner" id="editBanner">Editing entry. Tap Update or Cancel.</div>
+
+      <form id="entryForm">
+        <div class="field">
+          <label for="entryDate">Date</label>
+          <input id="entryDate" type="date" required />
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="clientSelect">Client</label>
+            <div class="select-wrap">
+              <select id="clientSelect" required></select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="projectSelect">Project</label>
+            <div class="select-wrap">
+              <select id="projectSelect">
+                <option value="">No project</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="What did you work on?"></textarea>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="hours">Hours</label>
+            <input id="hours" type="number" step="0.1" min="0" placeholder="e.g. 1.1" required />
+            <div class="muted">Enter in tenths. For example 1.1 = 1h 6m.</div>
+          </div>
+
+          <div class="field">
+            <label>Billable</label>
+            <div class="pill-row">
+              <button class="btn active-pill" id="billableBtn" type="button">Billable</button>
+              <button class="btn btn-secondary" id="nonBillableBtn" type="button">Non-billable</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Recent Entries</h2>
+      <button class="btn btn-primary" id="exportBtn" type="button" style="width:100%; margin-bottom:10px;">Export CSV</button>
+      <div class="summary">
+        <span id="summaryCount">0 entries</span>
+        <strong id="summaryTotal">0.0 hrs</strong>
+      </div>
+      <div id="entryList"></div>
+    </div>
+  </div>
+
+  <div class="sticky">
+    <div class="sticky-inner">
+      <button class="btn btn-primary" id="saveBtn" type="submit" form="entryForm">Save Entry</button>
+      <button class="btn btn-secondary hidden" id="cancelBtn" type="button">Cancel</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const CLIENTS_KEY = 'time_recorder_clients_v1';
+  const ENTRIES_KEY = 'time_recorder_entries_v1';
+  const PREFS_KEY = 'time_recorder_prefs_v1';
+
+  const newClient = document.getElementById('newClient');
+  const addClientBtn = document.getElementById('addClientBtn');
+  const clientList = document.getElementById('clientList');
+
+  const projectClientSelect = document.getElementById('projectClientSelect');
+  const newProject = document.getElementById('newProject');
+  const addProjectBtn = document.getElementById('addProjectBtn');
+  const projectList = document.getElementById('projectList');
+
+  const entryForm = document.getElementById('entryForm');
+  const entryDate = document.getElementById('entryDate');
+  const clientSelect = document.getElementById('clientSelect');
+  const projectSelect = document.getElementById('projectSelect');
+  const description = document.getElementById('description');
+  const hours = document.getElementById('hours');
+  const billableBtn = document.getElementById('billableBtn');
+  const nonBillableBtn = document.getElementById('nonBillableBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const entryList = document.getElementById('entryList');
+  const summaryCount = document.getElementById('summaryCount');
+  const summaryTotal = document.getElementById('summaryTotal');
+  const saveBtn = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const editBanner = document.getElementById('editBanner');
+  const formHeading = document.getElementById('formHeading');
+  const formCard = document.getElementById('formCard');
+  const toast = document.getElementById('toast');
+
+  let editingId = null;
+  let billableValue = 'yes';
+
+  function today() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  function loadClients() {
+    try {
+      return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveClients(clients) {
+    localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+  }
+
+  function loadEntries() {
+    try {
+      return JSON.parse(localStorage.getItem(ENTRIES_KEY)) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveEntries(entries) {
+    localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+  }
+
+  function loadPrefs() {
+    try {
+      return JSON.parse(localStorage.getItem(PREFS_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function savePrefs() {
+    localStorage.setItem(PREFS_KEY, JSON.stringify({
+      clientId: clientSelect.value,
+      projectId: projectSelect.value,
+      billable: billableValue
+    }));
+  }
+
+  function setBillable(value) {
+    billableValue = value;
+    if (value === 'yes') {
+      billableBtn.classList.add('active-pill');
+      billableBtn.classList.remove('btn-secondary');
+      nonBillableBtn.classList.remove('active-pill');
+      nonBillableBtn.classList.add('btn-secondary');
+    } else {
+      nonBillableBtn.classList.add('active-pill');
+      nonBillableBtn.classList.remove('btn-secondary');
+      billableBtn.classList.remove('active-pill');
+      billableBtn.classList.add('btn-secondary');
+    }
+  }
+
+  function formatHoursDecimal(value) {
+    const h = parseFloat(value) || 0;
+    return h.toFixed(1);
+  }
+
+  function formatHoursPretty(value) {
+    const totalMinutes = Math.round((parseFloat(value) || 0) * 60);
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return `${hrs}h ${mins}m`;
+  }
+
+  function getClientName(clientId) {
+    const clients = loadClients();
+    const client = clients.find(c => c.id === clientId);
+    return client ? client.name : '';
+  }
+
+  function getProjectName(clientId, projectId) {
+    if (!projectId) return '';
+    const clients = loadClients();
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return '';
+    const project = (client.projects || []).find(p => p.id === projectId);
+    return project ? project.name : '';
+  }
+
+  function populateClientSelects() {
+    const clients = loadClients();
+
+    const options = clients.length
+      ? clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+      : '<option value="">No clients yet</option>';
+
+    clientSelect.innerHTML = options;
+    projectClientSelect.innerHTML = options;
+
+    const prefs = loadPrefs();
+
+    if (clients.length) {
+      if (prefs.clientId && clients.some(c => c.id === prefs.clientId)) {
+        clientSelect.value = prefs.clientId;
+        projectClientSelect.value = prefs.clientId;
+      } else {
+        clientSelect.value = clients[0].id;
+        projectClientSelect.value = clients[0].id;
+      }
+    }
+    populateProjectSelect();
+  }
+
+  function populateProjectSelect() {
+    const clients = loadClients();
+    const selectedClientId = clientSelect.value;
+    const selectedManageClientId = projectClientSelect.value;
+
+    const client = clients.find(c => c.id === selectedClientId);
+    const manageClient = clients.find(c => c.id === selectedManageClientId);
+
+    const prefs = loadPrefs();
+
+    let projectOptions = '<option value="">No project</option>';
+    if (client && client.projects && client.projects.length) {
+      projectOptions += client.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
+    projectSelect.innerHTML = projectOptions;
+
+    if (prefs.projectId && client && client.projects.some(p => p.id === prefs.projectId)) {
+      projectSelect.value = prefs.projectId;
+    }
+
+    if (!manageClient) {
+      projectList.innerHTML = '<div class="empty">Add a client first</div>';
+      return;
+    }
+
+    if (!manageClient.projects || !manageClient.projects.length) {
+      projectList.innerHTML = '<div class="empty">No projects yet</div>';
+      return;
+    }
+
+    projectList.innerHTML = manageClient.projects.map(p => `
+      <div class="manage-item">
+        <span>${p.name}</span>
+        <button class="btn btn-small btn-danger" type="button" data-delete-project="${manageClient.id}|${p.id}">Delete</button>
+      </div>
+    `).join('');
+  }
+
+  function renderClients() {
+    const clients = loadClients();
+    if (!clients.length) {
+      clientList.innerHTML = '<div class="empty">No clients yet</div>';
+      return;
+    }
+
+    clientList.innerHTML = clients.map(c => `
+      <div class="manage-item">
+        <span>${c.name}</span>
+        <button class="btn btn-small btn-danger" type="button" data-delete-client="${c.id}">Delete</button>
+      </div>
+    `).join('');
+  }
+
+  function renderEntries() {
+    const entries = loadEntries().sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (!entries.length) {
+      entryList.innerHTML = '<div class="empty">No entries yet</div>';
+      summaryCount.textContent = '0 entries';
+      summaryTotal.textContent = '0.0 hrs';
+      return;
+    }
+
+    const total = entries.reduce((sum, e) => sum + (parseFloat(e.hours) || 0), 0);
+    summaryCount.textContent = `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`;
+    summaryTotal.textContent = `${total.toFixed(1)} hrs`;
+
+    entryList.innerHTML = entries.map(e => {
+      const clientName = getClientName(e.clientId);
+      const projectName = getProjectName(e.clientId, e.projectId);
+      const badge = e.billable === 'no' ? '<span class="badge badge-nonbillable">Non-billable</span>' : '';
+      const editingClass = editingId === e.id ? 'editing' : '';
+      return `
+        <div class="item ${editingClass}" data-edit-entry="${e.id}">
+          <div class="item-top">
+            <div>
+              <div class="client">${clientName} ${badge}</div>
+              <div class="title">${projectName || 'No project'}</div>
+              <div class="desc">${e.description || ''}</div>
+              <div class="meta">${e.date} · ${formatHoursPretty(e.hours)}</div>
+            </div>
+            <div style="text-align:right; min-width:94px;">
+              <div class="amount">${formatHoursDecimal(e.hours)}h</div>
+              <div class="actions">
+                <button class="btn btn-small btn-danger" type="button" data-delete-entry="${e.id}">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function refreshAll() {
+    populateClientSelects();
+    renderClients();
+    renderEntries();
+  }
+
+  function addClient() {
+    const name = newClient.value.trim();
+    if (!name) {
+      showToast('Enter a client name');
+      return;
+    }
+
+    const clients = loadClients();
+    clients.push({
+      id: crypto.randomUUID(),
+      name,
+      projects: []
+    });
+    saveClients(clients);
+    newClient.value = '';
+    refreshAll();
+    showToast('Client added');
+  }
+
+  function deleteClient(clientId) {
+    if (!confirm('Delete client?')) return;
+
+    const clients = loadClients().filter(c => c.id !== clientId);
+    saveClients(clients);
+
+    const entries = loadEntries().filter(e => e.clientId !== clientId);
+    saveEntries(entries);
+
+    if (editingId) {
+      const stillExists = entries.some(e => e.id === editingId);
+      if (!stillExists) cancelEdit();
+    }
+
+    refreshAll();
+    showToast('Client deleted');
+  }
+
+  function addProject() {
+    const clientId = projectClientSelect.value;
+    const projectName = newProject.value.trim();
+
+    if (!clientId) {
+      showToast('Select a client first');
+      return;
+    }
+    if (!projectName) {
+      showToast('Enter a project name');
+      return;
+    }
+
+    const clients = loadClients();
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    client.projects = client.projects || [];
+    client.projects.push({
+      id: crypto.randomUUID(),
+      name: projectName
+    });
+
+    saveClients(clients);
+    newProject.value = '';
+    refreshAll();
+    projectClientSelect.value = clientId;
+    populateProjectSelect();
+    showToast('Project added');
+  }
+
+  function deleteProject(clientId, projectId) {
+    if (!confirm('Delete project?')) return;
+
+    const clients = loadClients();
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    client.projects = (client.projects || []).filter(p => p.id !== projectId);
+    saveClients(clients);
+
+    const entries = loadEntries().map(e => {
+      if (e.clientId === clientId && e.projectId === projectId) {
+        return { ...e, projectId: '' };
+      }
+      return e;
+    });
+    saveEntries(entries);
+
+    refreshAll();
+    projectClientSelect.value = clientId;
+    populateProjectSelect();
+    showToast('Project deleted');
+  }
+
+  function enterNewMode() {
+    editingId = null;
+    formHeading.textContent = 'New Time Entry';
+    editBanner.classList.remove('show');
+    cancelBtn.classList.add('hidden');
+    saveBtn.textContent = 'Save Entry';
+    saveBtn.classList.remove('btn-update');
+    formCard.style.border = 'none';
+  }
+
+  function enterEditMode() {
+    formHeading.textContent = 'Edit Time Entry';
+    editBanner.classList.add('show');
+    cancelBtn.classList.remove('hidden');
+    saveBtn.textContent = 'Update Entry';
+    saveBtn.classList.add('btn-update');
+    formCard.style.border = '2px solid #ea580c';
+  }
+
+  function resetFormKeepPrefs() {
+    entryDate.value = today();
+    description.value = '';
+    hours.value = '';
+    const prefs = loadPrefs();
+    if (prefs.clientId) clientSelect.value = prefs.clientId;
+    populateProjectSelect();
+    if (prefs.projectId) projectSelect.value = prefs.projectId;
+    setBillable(prefs.billable || 'yes');
+  }
+
+  function buildEntry() {
+    return {
+      id: editingId || crypto.randomUUID(),
+      date: entryDate.value,
+      clientId: clientSelect.value,
+      projectId: projectSelect.value,
+      description: description.value.trim(),
+      hours: parseFloat(hours.value).toFixed(1),
+      billable: billableValue
+    };
+  }
+
+  function saveEntry() {
+    if (!entryDate.value) {
+      showToast('Enter a date');
+      return;
+    }
+    if (!clientSelect.value) {
+      showToast('Select a client');
+      return;
+    }
+    if (!hours.value || parseFloat(hours.value) <= 0) {
+      showToast('Enter hours');
+      return;
+    }
+
+    const entries = loadEntries();
+    const entry = buildEntry();
+
+    if (editingId) {
+      const index = entries.findIndex(e => e.id === editingId);
+      if (index >= 0) entries[index] = entry;
+    } else {
+      entries.push(entry);
+    }
+
+    saveEntries(entries);
+    savePrefs();
+    const mode = editingId ? 'updated' : 'saved';
+    enterNewMode();
+    resetFormKeepPrefs();
+    renderEntries();
+    showToast(`Entry ${mode}`);
+  }
+
+  function startEdit(entryId) {
+    const entry = loadEntries().find(e => e.id === entryId);
+    if (!entry) return;
+
+    editingId = entryId;
+    entryDate.value = entry.date;
+    clientSelect.value = entry.clientId;
+    populateProjectSelect();
+    projectSelect.value = entry.projectId || '';
+    description.value = entry.description || '';
+    hours.value = entry.hours || '';
+    setBillable(entry.billable || 'yes');
+    enterEditMode();
+    renderEntries();
+    formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelEdit() {
+    enterNewMode();
+    resetFormKeepPrefs();
+    renderEntries();
+  }
+
+  function deleteEntry(entryId) {
+    if (!confirm('Delete entry?')) return;
+    const entries = loadEntries().filter(e => e.id !== entryId);
+    saveEntries(entries);
+    if (editingId === entryId) cancelEdit();
+    renderEntries();
+    showToast('Entry deleted');
+  }
+
+  function exportCSV() {
+    const entries = loadEntries();
+    if (!entries.length) {
+      showToast('No entries to export');
+      return;
+    }
+
+    const headers = ['Date', 'Client', 'Project', 'Description', 'Hours', 'Billable'];
+    const rows = entries
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map(e => [
+        e.date,
+        getClientName(e.clientId),
+        getProjectName(e.clientId, e.projectId),
+        e.description,
+        e.hours,
+        e.billable === 'yes' ? 'Billable' : 'Non-billable'
+      ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+
+    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `time_entries_${today()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  addClientBtn.addEventListener('click', addClient);
+  addProjectBtn.addEventListener('click', addProject);
+  billableBtn.addEventListener('click', () => setBillable('yes'));
+  nonBillableBtn.addEventListener('click', () => setBillable('no'));
+  clientSelect.addEventListener('change', () => {
+    populateProjectSelect();
+    savePrefs();
+  });
+  projectClientSelect.addEventListener('change', populateProjectSelect);
+  projectSelect.addEventListener('change', savePrefs);
+  exportBtn.addEventListener('click', exportCSV);
+  cancelBtn.addEventListener('click', cancelEdit);
+
+  clientList.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-delete-client]');
+    if (!btn) return;
+    deleteClient(btn.getAttribute('data-delete-client'));
+  });
+
+  projectList.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-delete-project]');
+    if (!btn) return;
+    const [clientId, projectId] = btn.getAttribute('data-delete-project').split('|');
+    deleteProject(clientId, projectId);
+  });
+
+  entryList.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('[data-delete-entry]');
+    if (deleteBtn) {
+      e.stopPropagation();
+      deleteEntry(deleteBtn.getAttribute('data-delete-entry'));
+      return;
+    }
+    const editRow = e.target.closest('[data-edit-entry]');
+    if (editRow) {
+      startEdit(editRow.getAttribute('data-edit-entry'));
+    }
+  });
+
+  entryForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    saveEntry();
+  });
+
+  entryDate.value = today();
+  setBillable('yes');
+  refreshAll();
+  resetFormKeepPrefs();
+})();
+</script>
+</body>
+</html>
